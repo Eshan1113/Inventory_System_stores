@@ -73,6 +73,7 @@ if (isset($_GET['transaction_type'])) {
             border-radius: 0.375rem;
         }
     </style>
+    <?php include('header.php'); ?>
 </head>
 <body class="bg-gray-50">
 <?php include('header1.php'); ?>
