@@ -21,7 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Log activity
         logActivity($conn, $user['user_id'], 'LOGIN', 'User logged in');
         
-        header("Location: dashboard.php");
+        // Redirect based on role
+        if ($user['role'] === 'admin') {
+            header("Location: dashboard.php");
+        } elseif ($user['role'] === 'user') {
+            header("Location: user/dashboard.php");
+        } else {
+            // Default fallback
+            header("Location: index.php");
+        }
         exit();
     } else {
         $error = "Invalid username or password";
@@ -35,9 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Management - Login</title>
-  <link href="css/tailwind.min.css" rel="stylesheet">
-
-    <!-- Link Font Awesome CSS -->
+    <link href="css/tailwind.min.css" rel="stylesheet">
     <link href="css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
