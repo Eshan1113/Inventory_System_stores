@@ -15,58 +15,67 @@ if (isset($_GET['item_id'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Collect form data
     $item_id = isset($_POST['item_id']) ? $_POST['item_id'] : null;
-    $item_code = $_POST['item_code'];
+    $local_item_code = $_POST['local_item_code'];
     $item_name = $_POST['item_name'];
     $specifications = $_POST['specifications'];
     $category_id = $_POST['category_id'];
     $location_id = $_POST['location_id'];
     $quantity = $_POST['quantity'];
-    $warranty_until = $_POST['warranty_date'];  // Updated column name
+    $low_stock_threshold = $_POST['low_stock_threshold']; // New field
+    $warranty_until = $_POST['warranty_date'];
     $purchase_date = $_POST['purchase_date'];
     $purchase_price = $_POST['purchase_price'];
     $status = $_POST['status'];
-    
+
     // Handle image upload
     $image_url = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
         $image_name = $_FILES['image']['name'];
         $image_tmp_name = $_FILES['image']['tmp_name'];
-        $upload_dir = 'upload/';  // Set your upload folder path here
+        $upload_dir = 'upload/'; // Set your upload folder path here
         $image_url = $upload_dir . basename($image_name);
         move_uploaded_file($image_tmp_name, $image_url);
     }
 
-    if ($item_id) {
-        // Update existing item
-        $stmt = $conn->prepare("UPDATE items SET 
-            item_code = ?, 
-            item_name = ?, 
-            specifications = ?, 
-            image_url = ?, 
-            category_id = ?, 
-            location_id = ?, 
-            quantity = ?, 
-            warranty_until = ?,  // Updated column name
-            purchase_date = ?, 
-            purchase_price = ?, 
-            status = ?, 
-            updated_at = CURRENT_TIMESTAMP 
-            WHERE item_id = ?");
-        
-        $stmt->execute([$item_code, $item_name, $specifications, $image_url, $category_id, $location_id, 
-                        $quantity, $warranty_until, $purchase_date, $purchase_price, $status, $item_id]);
-    } else {
-        // Insert new item
-        $stmt = $conn->prepare("INSERT INTO items (item_code, item_name, specifications, image_url, category_id, 
-            location_id, quantity, warranty_until, purchase_date, purchase_price, status, created_by, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+    $origin_country = $_POST['origin_country']; // Capture the user-entered country
 
-        $stmt->execute([$item_code, $item_name, $specifications, $image_url, $category_id, $location_id, 
-                        $quantity, $warranty_until, $purchase_date, $purchase_price, $status, 1]);  // Assuming created_by is 1
-    }
+if ($item_id) {
+    // Update existing item
+    $stmt = $conn->prepare("UPDATE items SET 
+        local_item_code = ?, 
+        item_name = ?, 
+        specifications = ?, 
+        image_url = ?, 
+        category_id = ?, 
+        location_id = ?, 
+        quantity = ?, 
+        low_stock_threshold = ?, 
+        warranty_until = ?, 
+        purchase_date = ?, 
+        purchase_price = ?, 
+        status = ?, 
+        origin_country = ?, 
+        updated_at = CURRENT_TIMESTAMP 
+        WHERE item_id = ?");
+
+    $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id,
+                    $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
+                    $status, $origin_country, $item_id]);
+} else {
+    // Insert new item
+    $stmt = $conn->prepare("INSERT INTO items (local_item_code, item_name, specifications, image_url, category_id, 
+        location_id, quantity, low_stock_threshold, warranty_until, purchase_date, purchase_price, status, 
+        origin_country, created_by, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+
+    $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id, 
+                    $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
+                    $status, $origin_country, 1]);  // Assuming created_by is 1
+}
+
 
     // Redirect or message after successful insert/update
-    header('Location: items_list.php');  // Redirect to item list page or wherever necessary
+    header('Location: item_add.php');
     exit;
 }
 ?>
@@ -75,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="en">
 <head>
     <?php include('header.php'); ?>
+    <script src="../css/jquery-3.6.0.min.js"></script>
+    <script src="../css/select2.min.js"></script>
+    <script src="../css/sweetalert.min.js"></script>
 </head>
 <body class="bg-gray-50">
 <?php include('header1.php'); ?>
@@ -83,20 +95,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="bg-white shadow-lg rounded-lg p-6">
         <h1 class="text-2xl font-bold mb-4">Manage Item</h1>
         
-        <form method="POST" action="item_add.php" enctype="multipart/form-data">
+        <form id="itemForm" method="POST" action="item_add.php" enctype="multipart/form-data">
             <!-- Hidden field for item_id -->
             <?php if ($item): ?>
                 <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
             <?php endif; ?>
 
-            <!-- Item Code -->
+            <!-- Local Item Code -->
             <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="item_code">Item Code</label>
-                <input type="text" name="item_code" id="item_code" 
+                <label class="block text-gray-700 font-bold mb-2" for="local_item_code">Local Item Code</label>
+                <input type="text" name="local_item_code" id="local_item_code" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['item_code'] ?? ''; ?>" required>
+                       value="<?php echo $item['local_item_code'] ?? ''; ?>" required>
             </div>
-
+            <!-- Item Code -->
+         
             <!-- Item Name -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="item_name">Item Name</label>
@@ -104,6 +117,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
                        value="<?php echo $item['item_name'] ?? ''; ?>" required>
             </div>
+            <div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2" for="specifications">Specifications</label>
+    <textarea name="specifications" id="specifications" rows="6" 
+              class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              placeholder="Enter item specifications..."><?= $item['specifications'] ?? '' ?></textarea>
+</div>
+        <br>
 
             <!-- Image Upload -->
             <div class="mb-4">
@@ -148,6 +168,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                        value="<?php echo $item['quantity'] ?? '0'; ?>" required>
             </div>
 
+            <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-2" for="low_stock_threshold">Low Stock Threshold</label>
+                <input type="number" name="low_stock_threshold" id="low_stock_threshold"
+                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                       value="<?php echo $item['low_stock_threshold'] ?? ''; ?>" required>
+            </div>
+
             <!-- Warranty Until -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="warranty_date">Warranty Date</label>
@@ -171,6 +198,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
                        value="<?php echo $item['purchase_price'] ?? ''; ?>">
             </div>
+            <div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2" for="origin_country">Origin Country</label>
+    <input 
+        type="text" 
+        name="origin_country" 
+        id="origin_country" 
+        value="<?php echo htmlspecialchars($item['origin_country'] ?? ''); ?>" 
+        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" 
+        placeholder="Enter origin country" 
+        required
+    >
+</div>
 
             <!-- Status -->
             <div class="mb-4">
@@ -182,12 +221,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="out_of_stock" <?php echo isset($item['status']) && $item['status'] == 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
                 </select>
             </div>
-
+            
             <!-- Submit Button -->
-            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded focus:outline-none focus:ring">Save Item</button>
+            <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded focus:outline-none focus:ring">Save Item</button>
         </form>
     </div>
 </div>
 
+<script>
+    $(document).ready(function() {
+        $('#itemForm').on('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: new FormData(this),
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    let res = JSON.parse(response);
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Item saved successfully!',
+                        }).then(() => {
+                            // Reload or redirect after confirmation
+                            window.location.href = 'item_add.php';
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = xhr.responseText || 'Something went wrong.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                    });
+                }
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
+
