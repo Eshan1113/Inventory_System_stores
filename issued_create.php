@@ -62,21 +62,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])
 }
 ?>
 
-<?php
+<?php include('header.php'); ?>
 
-include('header.php');
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for Item, Group, and Employee dropdowns
+        $('#item_id').select2();
+        $('#group_id').select2();
+        $('#employee_id').select2();
 
-?>
-
-
-    <script>
-        $(document).ready(function() {
-            // Initialize Select2 for Item, Group, and Employee dropdowns
-            $('#item_id').select2();
-            $('#group_id').select2();
-            $('#employee_id').select2();
-        });
-    </script>
+        // If there's a success message, automatically hide it after 3 seconds
+        if ($('#success-message').length) {
+            setTimeout(function() {
+                $('#success-message').fadeOut();
+            }, 3000); // 3000ms = 3 seconds
+        }
+    });
+</script>
 </head>
 <body class="bg-gray-50">
 <?php
