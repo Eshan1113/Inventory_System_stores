@@ -13,7 +13,7 @@
                             <i class="fas fa-box-open mr-2"></i> Item Details
                         </div>
                         <ul class="ml-6 space-y-2">
-                            <li><a href="items/create.php" class="sidebar-link block text-gray-200 hover:text-white">Add Item</a></li>
+                            <li><a href="item_add.php" class="sidebar-link block text-gray-200 hover:text-white">Add Item</a></li>
                             <li><a href="items/view.php" class="sidebar-link block text-gray-200 hover:text-white">View Items</a></li>
                             <li><a href="items/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit Item</a></li>
                             <li><a href="items/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete Item</a></li>
