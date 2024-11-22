@@ -5,12 +5,12 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Store Management</title>
-<link href="../css/tailwind.min.css" rel="stylesheet">
-<link href="../css/all.min.css" rel="stylesheet">
-<link href="../font/css/all.min.css" rel="stylesheet">
- <link href="../css/select2.min.css" rel="stylesheet" />
-<script src="../css/jquery-3.6.0.min.js"></script>
-<script src="../css/select2.min.js"></script>
+<link href="css/tailwind.min.css" rel="stylesheet">
+<link href="css/all.min.css" rel="stylesheet">
+<link href="font/css/all.min.css" rel="stylesheet">
+ <link href="css/select2.min.css" rel="stylesheet" />
+<script src="css/jquery-3.6.0.min.js"></script>
+<script src="css/select2.min.js"></script>
 <style>
         /* Custom Styles */
         .sidebar-link {
