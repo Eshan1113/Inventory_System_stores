@@ -52,7 +52,7 @@
                         </div>
                         <ul class="ml-6 space-y-2">
                             <li><a href="user_log.php" class="sidebar-link block text-gray-200 hover:text-white">User Log</a></li>
-                            <li><a href="user_log.php" class="sidebar-link block text-gray-200 hover:text-white">Change Password</a></li>
+                            <li><a href="passwordchange.php" class="sidebar-link block text-gray-200 hover:text-white">Change Password</a></li>
                             
                         </ul>
                     </li>

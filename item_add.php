@@ -84,9 +84,9 @@ if ($item_id) {
 <html lang="en">
 <head>
     <?php include('header.php'); ?>
-    <script src="../css/jquery-3.6.0.min.js"></script>
-    <script src="../css/select2.min.js"></script>
-    <script src="../css/sweetalert.min.js"></script>
+    <script src="css/jquery-3.6.0.min.js"></script>
+    <script src="css/select2.min.js"></script>
+    <script src="css/sweetalert.min.js"></script>
 </head>
 <body class="bg-gray-50">
 <?php include('header1.php'); ?>
@@ -227,44 +227,46 @@ if ($item_id) {
         </form>
     </div>
 </div>
-
 <script>
-    $(document).ready(function() {
-        $('#itemForm').on('submit', function(event) {
-            event.preventDefault(); // Prevent default form submission
-            
+    $(document).ready(function () {
+        $('#itemForm').on('submit', function (event) {
+            event.preventDefault();
+
             $.ajax({
                 url: $(this).attr('action'),
                 type: 'POST',
                 data: new FormData(this),
                 contentType: false,
                 processData: false,
-                success: function(response) {
+                success: function (response) {
                     let res = JSON.parse(response);
                     if (res.success) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Success',
-                            text: 'Item saved successfully!',
+                            text: res.message,
                         }).then(() => {
-                            // Reload or redirect after confirmation
                             window.location.href = 'item_add.php';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: res.message,
                         });
                     }
                 },
-                error: function(xhr, status, error) {
-                    let errorMessage = xhr.responseText || 'Something went wrong.';
+                error: function () {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: errorMessage,
+                        text: 'An unexpected error occurred while saving the item.',
                     });
                 }
             });
         });
     });
 </script>
-
 </body>
 </html>
 

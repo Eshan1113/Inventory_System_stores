@@ -1,299 +1,85 @@
 <?php
 require_once 'config.php';
 
-// Fetch categories and locations
-$categories = $conn->query("SELECT category_id, category_name FROM item_categories")->fetchAll(PDO::FETCH_ASSOC);
-$locations = $conn->query("SELECT location_id, location_name FROM locations")->fetchAll(PDO::FETCH_ASSOC);
-
-$item = null;
-if (isset($_GET['item_id'])) {
-    $stmt = $conn->prepare("SELECT * FROM items WHERE item_id = ?");
-    $stmt->execute([$_GET['item_id']]);
-    $item = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    try {
-        // Collect form data
-        $item_id = isset($_POST['item_id']) ? $_POST['item_id'] : null;
-        $local_item_code = $_POST['local_item_code'];
-        $item_name = $_POST['item_name'];
-        $specifications = $_POST['specifications'];
-        $category_id = $_POST['category_id'];
-        $location_id = $_POST['location_id'];
-        $quantity = $_POST['quantity'];
-        $low_stock_threshold = $_POST['low_stock_threshold'];
-        $warranty_until = $_POST['warranty_date'];
-        $purchase_date = $_POST['purchase_date'];
-        $purchase_price = $_POST['purchase_price'];
-        $status = $_POST['status'];
-        $origin_country = $_POST['origin_country'];
-
-        // Handle image upload
-        $image_url = null;
-        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $image_name = $_FILES['image']['name'];
-            $image_tmp_name = $_FILES['image']['tmp_name'];
-            $upload_dir = 'upload/';
-            $image_url = $upload_dir . basename($image_name);
-            move_uploaded_file($image_tmp_name, $image_url);
-        }
-
-        if ($item_id) {
-            // Update existing item
-            $stmt = $conn->prepare("UPDATE items SET 
-                local_item_code = ?, 
-                item_name = ?, 
-                specifications = ?, 
-                image_url = ?, 
-                category_id = ?, 
-                location_id = ?, 
-                quantity = ?, 
-                low_stock_threshold = ?, 
-                warranty_until = ?, 
-                purchase_date = ?, 
-                purchase_price = ?, 
-                status = ?, 
-                origin_country = ?, 
-                updated_at = CURRENT_TIMESTAMP 
-                WHERE item_id = ?");
-
-            $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id,
-                            $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
-                            $status, $origin_country, $item_id]);
+    $username = sanitizeInput($_POST['username']);
+    $password = $_POST['password'];
+    
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND status = 'active'");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
+    
+    if ($user && password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['user_id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+        
+        // Update last login
+        $stmt = $conn->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?");
+        $stmt->execute([$user['user_id']]);
+        
+        // Log activity
+        logActivity($conn, $user['user_id'], 'LOGIN', 'User logged in');
+        
+        // Redirect based on role
+        if ($user['role'] === 'admin') {
+            header("Location: dashboard.php");
+        } elseif ($user['role'] === 'user') {
+            header("Location: user/dashboard.php");
         } else {
-            // Insert new item
-            $stmt = $conn->prepare("INSERT INTO items (local_item_code, item_name, specifications, image_url, category_id, 
-                location_id, quantity, low_stock_threshold, warranty_until, purchase_date, purchase_price, status, 
-                origin_country, created_by, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-
-            $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id, 
-                            $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
-                            $status, $origin_country, 1]);  // Assuming created_by is 1
+            // Default fallback
+            header("Location: index.php");
         }
-
-        // Success response
-        echo json_encode(['success' => true, 'message' => 'Item saved successfully!']);
-    } catch (Exception $e) {
-        // Error response
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        exit();
+    } else {
+        $error = "Invalid username or password";
     }
-    exit;
 }
-
-
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <?php include('header.php'); ?>
-    <script src="../css/jquery-3.6.0.min.js"></script>
-    <script src="../css/select2.min.js"></script>
-    <script src="../css/sweetalert.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Management - Login</title>
+    <link href="css/tailwind.min.css" rel="stylesheet">
+    <link href="css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50">
-<?php include('header1.php'); ?>
-
-<div class="container mx-auto p-4">
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <h1 class="text-2xl font-bold mb-4">Manage Item</h1>
-        <h3 
-  id="alert1" 
-  class="hidden bg-green-100 text-green-800 border border-green-400 px-4 py-2 rounded shadow-sm font-semibold"
->
-  Success
-</h3>
-
-        <form id="itemForm" method="POST" action="item_add.php" enctype="multipart/form-data">
-            <!-- Hidden field for item_id -->
-            <?php if ($item): ?>
-                <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
-            <?php endif; ?>
-
-            <!-- Local Item Code -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="local_item_code">Local Item Code</label>
-                <input type="text" name="local_item_code" id="local_item_code" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['local_item_code'] ?? ''; ?>" required>
-            </div>
-            <!-- Item Code -->
-         
-            <!-- Item Name -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="item_name">Item Name</label>
-                <input type="text" name="item_name" id="item_name" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['item_name'] ?? ''; ?>" required>
-            </div>
-            <div class="mb-4">
-    <label class="block text-gray-700 font-bold mb-2" for="specifications">Specifications</label>
-    <textarea name="specifications" id="specifications" rows="6" 
-              class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Enter item specifications..."><?= $item['specifications'] ?? '' ?></textarea>
-</div>
-        <br>
-
-            <!-- Image Upload -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="image">Item Image</label>
-                <input type="file" name="image" id="image" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring">
-            </div>
-
-            <!-- Category -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="category_id">Category</label>
-                <select name="category_id" id="category_id" class="w-full border rounded select2">
-                    <option value="">-- Select Category --</option>
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?php echo $category['category_id']; ?>" 
-                                <?php echo isset($item['category_id']) && $item['category_id'] == $category['category_id'] ? 'selected' : ''; ?>>
-                            <?php echo $category['category_name']; ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Location -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="location_id">Location</label>
-                <select name="location_id" id="location_id" class="w-full border rounded select2">
-                    <option value="">-- Select Location --</option>
-                    <?php foreach ($locations as $location): ?>
-                        <option value="<?php echo $location['location_id']; ?>" 
-                                <?php echo isset($item['location_id']) && $item['location_id'] == $location['location_id'] ? 'selected' : ''; ?>>
-                            <?php echo $location['location_name']; ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- Quantity -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="quantity">Stock</label>
-                <input type="number" name="quantity" id="quantity" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['quantity'] ?? '0'; ?>" required>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="low_stock_threshold">Low Stock Threshold</label>
-                <input type="number" name="low_stock_threshold" id="low_stock_threshold"
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['low_stock_threshold'] ?? ''; ?>" required>
-            </div>
-
-            <!-- Warranty Until -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="warranty_date">Warranty Date</label>
-                <input type="date" name="warranty_date" id="warranty_date" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['warranty_until'] ?? ''; ?>">
-            </div>
-
-            <!-- Purchase Date -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="purchase_date">Purchase Date</label>
-                <input type="date" name="purchase_date" id="purchase_date" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['purchase_date'] ?? ''; ?>">
-            </div>
-
-            <!-- Purchase Price -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="purchase_price">Purchase Price (in Rupees)</label>
-                <input type="number" name="purchase_price" id="purchase_price" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['purchase_price'] ?? ''; ?>">
-            </div>
-            <div class="mb-4">
-    <label class="block text-gray-700 font-bold mb-2" for="origin_country">Origin Country</label>
-    <input 
-        type="text" 
-        name="origin_country" 
-        id="origin_country" 
-        value="<?php echo htmlspecialchars($item['origin_country'] ?? ''); ?>" 
-        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" 
-        placeholder="Enter origin country" 
-        required
-    >
-</div>
-
-            <!-- Status -->
-            <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="status">Status</label>
-                <select name="status" id="status" class="w-full border rounded select2">
-                    <option value="">-- Select Status --</option>
-                    <option value="available" <?php echo isset($item['status']) && $item['status'] == 'available' ? 'selected' : ''; ?>>Available</option>
-                    <option value="low_stock" <?php echo isset($item['status']) && $item['status'] == 'low_stock' ? 'selected' : ''; ?>>Low Stock</option>
-                    <option value="out_of_stock" <?php echo isset($item['status']) && $item['status'] == 'out_of_stock' ? 'selected' : ''; ?>>Out of Stock</option>
-                </select>
-            </div>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h1 class="text-2xl font-bold text-center mb-6">Store Management</h1>
             
-            <!-- Submit Button -->
-            <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded focus:outline-none focus:ring">Save Item</button>
-        </form>
+            <?php if (isset($error)): ?>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <?php echo $error; ?>
+                </div>
+            <?php endif; ?>
+            
+            <form method="POST" action="">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                        Username
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="username" type="text" name="username" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                        Password
+                    </label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           id="password" type="password" name="password" required>
+                </div>
+                
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
+                        type="submit">
+                    Sign In
+                </button>
+            </form>
+        </div>
     </div>
-</div>
-<!-- echo json_encode(['success' => true, 'message' => 'Item saved successfully!']); -->
-
-<script>
-  $(document).ready(function() {
-    $('#itemForm').on('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
-        
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: new FormData(this),
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                // Parse response
-                if (response.success == true) {
-                    alert("sucess");
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: response.message,
-                    }).then(() => {
-                        // Reload or redirect after confirmation
-                        window.location.href = 'item_add.php';
-                    });
-                } else {
-                    $('#itemForm')[0].reset();
-                    $('#alert1').removeClass('hidden');
-                    setTimeout(function() {
-        $('#alert1').addClass('hidden');
-    }, 3000);
-                    // alert("fail");
-                    // Swal.fire({
-                    //     icon: 'error',
-                    //     title: 'Error',
-                    //     text: response.message,
-                    // });
-
-                }
-            },
-            error: function(xhr) {
-                let errorMessage = xhr.responseJSON?.message || 'Something went wrong.';
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMessage,
-                });
-            }
-        });
-    });
-});
-
-</script>
-
 </body>
 </html>
-

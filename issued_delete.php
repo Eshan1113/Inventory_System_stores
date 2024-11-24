@@ -46,11 +46,11 @@ if (isset($_GET['transaction_type'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delete Issued Item</title>
-    <link href="../css/tailwind.min.css" rel="stylesheet">
-    <link href="../css/select2.min.css" rel="stylesheet" />
-    <script src="../css/jquery-3.6.0.min.js"></script>
-    <script src="../css/select2.min.js"></script>
-    <script src="../css/sweetalert.min.js"></script>
+    <link href="css/tailwind.min.css" rel="stylesheet">
+    <link href="css/select2.min.css" rel="stylesheet" />
+    <script src="css/jquery-3.6.0.min.js"></script>
+    <script src="css/select2.min.js"></script>
+    <script src="css/sweetalert.min.js"></script>
     <style>
         .form-container {
             max-width: 600px;
