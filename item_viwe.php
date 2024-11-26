@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <?php include('header.php'); ?>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   
 </head>
 <body class="bg-gray-50">
     <?php include('header1.php'); ?>

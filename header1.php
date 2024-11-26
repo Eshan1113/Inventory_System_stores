@@ -39,10 +39,10 @@
                             <i class="fas fa-users mr-2"></i> User Management
                         </div>
                         <ul class="ml-6 space-y-2">
-                            <li><a href="users/create.php" class="sidebar-link block text-gray-200 hover:text-white">Add User</a></li>
-                            <li><a href="users/view.php" class="sidebar-link block text-gray-200 hover:text-white">View Users</a></li>
-                            <li><a href="users/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit User</a></li>
-                            <li><a href="users/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete User</a></li>
+                            <li><a href="add_user.php" class="sidebar-link block text-gray-200 hover:text-white">Add User</a></li>
+                            <li><a href="view_user.php" class="sidebar-link block text-gray-200 hover:text-white">View Users</a></li>
+                            <!-- <li><a href="users/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit User</a></li>
+                            <li><a href="users/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete User</a></li> -->
                         </ul>
                     </li>
                     <li>
