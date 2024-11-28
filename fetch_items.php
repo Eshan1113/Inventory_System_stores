@@ -1,7 +1,13 @@
 <?php
 // Include database connection
 include 'config.php';
-
+if (isset($_GET['q'])) {
+    $search = $_GET['q'];
+    $stmt = $conn->prepare("SELECT id, item_name FROM item_name_list WHERE item_name LIKE ? LIMIT 10");
+    $stmt->execute(["%$search%"]);
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+    echo json_encode(['items' => $items]);
 // Ensure that the PDO connection is established
 if (!$conn) {
     die("Database connection failed.");

@@ -9,7 +9,8 @@ try {
     // Fetch categories and locations
     $categories = $conn->query("SELECT category_id, category_name FROM item_categories")->fetchAll(PDO::FETCH_ASSOC);
     $locations = $conn->query("SELECT location_id, location_name FROM locations")->fetchAll(PDO::FETCH_ASSOC);
-
+    $items = $conn->query("SELECT id, item_name FROM item_name_list")->fetchAll(PDO::FETCH_ASSOC);
+    $sub_items = $conn->query("SELECT id, sub_item_name FROM sub_item_list")->fetchAll(PDO::FETCH_ASSOC);
     $item = null;
     if (isset($_GET['item_id'])) {
         $stmt = $conn->prepare("SELECT * FROM items WHERE item_id = ?");
@@ -31,7 +32,6 @@ try {
         // Set purchase and warranty dates to null if not provided
         $warranty_until = (!empty($_POST['warranty_date']) && $_POST['warranty_date'] !== "") ? $_POST['warranty_date'] : null;
         $purchase_date = (!empty($_POST['purchase_date']) && $_POST['purchase_date'] !== "") ? $_POST['purchase_date'] : null;
-
         $purchase_price = $_POST['purchase_price'] ?? null;
         $status = $_POST['status'] ?? null;
         $origin_country = $_POST['origin_country'] ?? null;
@@ -51,6 +51,7 @@ try {
             $stmt = $conn->prepare("UPDATE items SET 
                 local_item_code = ?, 
                 item_name = ?, 
+                sub_name = ?,    -- Fix: Ensure this is passed to the query
                 specifications = ?, 
                 image_url = ?, 
                 category_id = ?, 
@@ -64,23 +65,23 @@ try {
                 origin_country = ?, 
                 updated_at = CURRENT_TIMESTAMP 
                 WHERE item_id = ?");
-
-            $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id,
+        
+            $stmt->execute([$local_item_code, $item_name, $sub_name, $specifications, $image_url, $category_id, $location_id,
                             $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
                             $status, $origin_country, $item_id]);
-
+        
             $response = ['success' => true, 'message' => 'Item updated successfully!'];
         } else {
             // Insert new item
-            $stmt = $conn->prepare("INSERT INTO items (local_item_code, item_name, specifications, image_url, category_id, 
+            $stmt = $conn->prepare("INSERT INTO items (local_item_code, item_name, sub_name, specifications, image_url, category_id, 
                 location_id, quantity, low_stock_threshold, warranty_until, purchase_date, purchase_price, status, 
                 origin_country, created_by, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
-
-            $stmt->execute([$local_item_code, $item_name, $specifications, $image_url, $category_id, $location_id, 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+        
+            $stmt->execute([$local_item_code, $item_name, $sub_name, $specifications, $image_url, $category_id, $location_id, 
                             $quantity, $low_stock_threshold, $warranty_until, $purchase_date, $purchase_price, 
                             $status, $origin_country, 1]);  // Assuming created_by is 1
-
+        
             $response = ['success' => true, 'message' => 'Item added successfully!'];
         }
 
@@ -97,14 +98,10 @@ try {
 }
 ?>
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <?php include('header.php'); ?>
-    
- 
     <style>
         /* Custom styles for the success and error messages */
         .message {
@@ -123,6 +120,11 @@ try {
             background-color: #dc3545; /* Red for error */
         }
     </style>
+    <link href="css/select2.min.css" rel="stylesheet" />
+
+<!-- Include Select2 JS in the <head> or just before closing </body> tag -->
+<script src="cssjquery-3.6.0.min.js"></script>
+<script src="css/select2.min.js"></script>
 </head>
 <body class="bg-gray-50">
 <?php include('header1.php'); ?>
@@ -153,9 +155,23 @@ try {
             <!-- Item Name -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="item_name">Item Name</label>
-                <input type="text" name="item_name" id="item_name" 
-                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['item_name'] ?? ''; ?>">
+                <select name="item_name" id="item_name" class="w-full border rounded select2" onchange="fetchSubItems()">
+                    <option value="">-- Select Item Name --</option>
+                    <?php foreach ($items as $item): ?>
+                        <option value="<?php echo $item['id']; ?>"><?php echo $item['item_name']; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Sub Item Name -->
+            <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-2" for="sub_name">Sub Item Name</label>
+                <select name="sub_name" id="sub_name" class="w-full border rounded select2">
+                    <option value="">-- Select Sub Item Name --</option>
+                    <?php foreach ($sub_items as $sub_item): ?>
+                        <option value="<?php echo $sub_item['id']; ?>"><?php echo $sub_item['sub_item_name']; ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <!-- Specifications -->
@@ -194,7 +210,6 @@ try {
     </select>
 </div>
 
-
             <!-- Location -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="location_id">Location</label>
@@ -214,29 +229,28 @@ try {
                     ?>
                 </select>
             </div>
-
             <!-- Quantity -->
             <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="quantity">Stock</label>
+                <label class="block text-gray-700 font-bold mb-2" for="quantity">Quantity</label>
                 <input type="number" name="quantity" id="quantity" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['quantity'] ?? '0'; ?>">
+                       value="<?= $item['quantity'] ?? '' ?>">
             </div>
 
             <!-- Low Stock Threshold -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="low_stock_threshold">Low Stock Threshold</label>
-                <input type="number" name="low_stock_threshold" id="low_stock_threshold"
+                <input type="number" name="low_stock_threshold" id="low_stock_threshold" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['low_stock_threshold'] ?? ''; ?>">
+                       value="<?= $item['low_stock_threshold'] ?? '' ?>">
             </div>
 
-            <!-- Warranty Until -->
+            <!-- Warranty Date -->
             <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="warranty_date">Warranty Date</label>
+                <label class="block text-gray-700 font-bold mb-2" for="warranty_date">Warranty Until</label>
                 <input type="date" name="warranty_date" id="warranty_date" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['warranty_until'] ?? ''; ?>">
+                       value="<?= $item['warranty_until'] ?? '' ?>">
             </div>
 
             <!-- Purchase Date -->
@@ -244,47 +258,103 @@ try {
                 <label class="block text-gray-700 font-bold mb-2" for="purchase_date">Purchase Date</label>
                 <input type="date" name="purchase_date" id="purchase_date" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['purchase_date'] ?? ''; ?>">
+                       value="<?= $item['purchase_date'] ?? '' ?>">
             </div>
 
             <!-- Purchase Price -->
             <div class="mb-4">
-                <label class="block text-gray-700 font-bold mb-2" for="purchase_price">Purchase Price (in Rupees)</label>
-                <input type="number" name="purchase_price" id="purchase_price" 
+                <label class="block text-gray-700 font-bold mb-2" for="purchase_price">Purchase Price</label>
+                <input type="text" name="purchase_price" id="purchase_price" 
                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                       value="<?php echo $item['purchase_price'] ?? ''; ?>">
+                       value="<?= $item['purchase_price'] ?? '' ?>">
             </div>
+
+            <!-- Status -->
+            <!-- <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-2" for="status">Status</label>
+                <select name="status" id="status" class="w-full border rounded">
+                    <option value="1" <?php echo ($item['status'] == 1) ? 'selected' : ''; ?>>Active</option>
+                    <option value="0" <?php echo ($item['status'] == 0) ? 'selected' : ''; ?>>Inactive</option>
+                </select>
+            </div> -->
 
             <!-- Origin Country -->
             <div class="mb-4">
                 <label class="block text-gray-700 font-bold mb-2" for="origin_country">Origin Country</label>
-                <input 
-                    type="text" 
-                    name="origin_country" 
-                    id="origin_country" 
-                    value="<?php echo htmlspecialchars($item['origin_country'] ?? ''); ?>" 
-                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" 
-                    placeholder="Enter origin country" 
-                >
+                <input type="text" name="origin_country" id="origin_country" 
+                       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                       value="<?= $item['origin_country'] ?? '' ?>">
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" id="submitBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded focus:outline-none focus:ring">Save Item</button>
+            <div class="mb-4">
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring">
+                    Save Item
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
 <script src="css/jquery-3.6.0.min.js"></script>
 <script>
-    // Handle the display of success/error messages
-    document.addEventListener('DOMContentLoaded', function() {
-        const message = document.querySelector('.message');
-        if (message) {
-            message.style.display = 'block';
-            setTimeout(function() {
-                message.style.display = 'none';
-            }, 5000); // Hide the message after 5 seconds
+   $(document).ready(function() {
+    // Initialize Select2 for both dropdowns
+    $('#item_name').select2({
+        placeholder: '-- Select Item Name --',
+        allowClear: true,
+        ajax: {
+            url: 'fetch_items.php', // Your backend URL to fetch item names
+            dataType: 'json',
+            method: 'GET',
+            delay: 250, // Delay for input for better performance
+            data: function (params) {
+                return {
+                    q: params.term // Search term entered by the user
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.items // This should return an array of items
+                };
+            }
         }
     });
+
+    // Initialize Select2 for Sub Item Name with a similar AJAX approach
+    $('#sub_name').select2({
+        placeholder: '-- Select Sub Item Name --',
+        allowClear: true,
+        ajax: {
+            url: 'fetch_sub_items.php', // Your backend URL to fetch sub-item names
+            dataType: 'json',
+            method: 'GET',
+            delay: 250, // Delay for input for better performance
+            data: function (params) {
+                return {
+                    item_id: $('#item_name').val(), // Send the selected item id to get related sub-items
+                    q: params.term // Search term entered by the user
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.sub_items // This should return an array of sub-items
+                };
+            }
+        }
+    });
+
+    // Fetch sub-items based on selected item (optional if you want to load sub-items directly based on item selection)
+    $('#item_name').on('change', function() {
+        var item_id = $(this).val();
+        if (item_id) {
+            $('#sub_name').prop('disabled', false); // Enable sub-item dropdown if item selected
+        } else {
+            $('#sub_name').prop('disabled', true); // Disable sub-item dropdown if no item selected
+        }
+    });
+});
+
 </script>
 </body>
 </html>
