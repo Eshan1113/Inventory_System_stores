@@ -8,6 +8,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Delete the transaction
         $stmt = $conn->prepare("DELETE FROM item_transactions WHERE transaction_id = ?");
         $stmt->bindValue(1, $transaction_id, PDO::PARAM_INT);
+        // Fetch items with correct column name (item_list_name)
+ // Use 'item_list_name' here
+
 
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Transaction deleted successfully!']);

@@ -1,17 +1,6 @@
 <?php
 // Include database connection
 include 'config.php';
-if (isset($_GET['q'])) {
-    $search = $_GET['q'];
-    $stmt = $conn->prepare("SELECT id, item_name FROM item_name_list WHERE item_name LIKE ? LIMIT 10");
-    $stmt->execute(["%$search%"]);
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-    echo json_encode(['items' => $items]);
-// Ensure that the PDO connection is established
-if (!$conn) {
-    die("Database connection failed.");
-}
 
 // Get the filter parameters
 $search = isset($_GET['search']) ? $_GET['search'] : '';
@@ -19,14 +8,15 @@ $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : '';
 
 // Build the SQL query
-$sql = "SELECT i.*, c.category_name, l.location_name 
+$sql = "SELECT i.*, c.category_name, l.location_name, inl.item_name 
         FROM items i
         LEFT JOIN item_categories c ON i.category_id = c.category_id
         LEFT JOIN locations l ON i.location_id = l.location_id
+        LEFT JOIN item_name_list inl ON i.item_name = inl.id  -- Corrected the column name
         WHERE 1";
 
 if ($search) {
-    $sql .= " AND (i.item_name LIKE :search)";
+    $sql .= " AND (inl.item_name LIKE :search)";
 }
 if ($startDate && $endDate) {
     $sql .= " AND i.purchase_date BETWEEN :start_date AND :end_date";
@@ -36,8 +26,10 @@ if ($startDate && $endDate) {
     $sql .= " AND i.purchase_date <= :end_date";
 }
 
+// Prepare the statement
 $stmt = $conn->prepare($sql);
 
+// Bind parameters
 if ($search) {
     $stmt->bindValue(':search', '%' . $search . '%');
 }
@@ -48,8 +40,10 @@ if ($endDate) {
     $stmt->bindValue(':end_date', $endDate);
 }
 
+// Execute the statement
 $stmt->execute();
 
+// Fetch the results
 $items = $stmt->fetchAll();
 
 foreach ($items as $item) {

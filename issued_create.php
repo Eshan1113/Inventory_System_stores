@@ -1,22 +1,36 @@
 <?php
 include 'config.php'; // Include your database connection file
 
-// Fetch data function
-function fetchData($conn, $table, $columns, $condition = '') {
+// Fetch data function using prepared statements
+function fetchData($conn, $table, $columns, $condition = '', $params = []) {
     $sql = "SELECT $columns FROM $table $condition";
-    $result = $conn->query($sql);
-    return $result->fetchAll(PDO::FETCH_ASSOC); // Corrected method
+    $stmt = $conn->prepare($sql);
+    
+    // Bind parameters dynamically
+    foreach ($params as $param => $value) {
+        $stmt->bindValue($param, $value);
+    }
+
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Fetch items and employee groups
-$items = fetchData($conn, 'items', 'item_id, item_name');
+$items = fetchData($conn, 'items i', 'i.item_id, n.item_name', 'JOIN item_name_list n ON i.item_name = n.id');
 $employee_groups = fetchData($conn, 'employee_groups', 'group_id, group_name');
 
 // Fetch employees dynamically based on selected group
 $group_id = isset($_POST['group_id']) ? $_POST['group_id'] : '';
-$employees = $group_id
-    ? fetchData($conn, 'employees', 'employee_id, full_name', "WHERE group_id = $group_id")
-    : [];
+$employees = [];
+if ($group_id) {
+    $employees = fetchData($conn, 'employees', 'employee_id, full_name', "WHERE group_id = :group_id", [':group_id' => $group_id]);
+}
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // Redirect or show an error
+    die("User is not logged in.");
+}
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])) {
@@ -27,40 +41,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transaction'])
     $transaction_date = $_POST['transaction_date'];
     $quantity = $_POST['quantity'];
     $remarks = $_POST['remarks'] ?? null;
-    $created_by = $_SESSION['user_id']; // Replace with your session logic
+    $user_id = $_SESSION['user_id']; // This will be used as 'created_by'
 
-    // Adjust item quantity based on transaction type
+    // Handle update query based on transaction type
     $update_query = '';
     if (in_array($transaction_type, ['issue', 'damage', 'lost', 'discard'])) {
-        $update_query = "UPDATE items SET quantity = quantity - $quantity WHERE item_id = $item_id";
+        $update_query = "UPDATE items SET quantity = quantity - :quantity WHERE item_id = :item_id AND created_by = :created_by";
     } elseif ($transaction_type === 'return') {
-        $update_query = "UPDATE items SET quantity = quantity + $quantity WHERE item_id = $item_id";
+        $update_query = "UPDATE items SET quantity = quantity + :quantity WHERE item_id = :item_id AND created_by = :created_by";
     }
-
-    // Update item quantity in the database
-    if ($conn->query($update_query)) {
-        // Insert the transaction into the database
-        $stmt = $conn->prepare("INSERT INTO item_transactions (item_id, employee_id, transaction_date, transaction_type, quantity, remarks, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        
-        // Use bindValue() for PDO (instead of bind_param())
-        $stmt->bindValue(1, $item_id, PDO::PARAM_INT);
-        $stmt->bindValue(2, $employee_id, PDO::PARAM_INT);
-        $stmt->bindValue(3, $transaction_date, PDO::PARAM_STR);
-        $stmt->bindValue(4, $transaction_type, PDO::PARAM_STR);
-        $stmt->bindValue(5, $quantity, PDO::PARAM_INT);
-        $stmt->bindValue(6, $remarks, PDO::PARAM_STR);
-        $stmt->bindValue(7, $created_by, PDO::PARAM_INT);
-
+    
+    if ($update_query) {
+        $stmt = $conn->prepare($update_query);
+        $stmt->bindValue(':item_id', $item_id, PDO::PARAM_INT);
+        $stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT); // Use $user_id here
+    
         if ($stmt->execute()) {
-            $success_message = "Transaction recorded successfully!";
+            // Insert the transaction into the database
+            $stmt = $conn->prepare("INSERT INTO item_transactions (item_id, employee_id, transaction_date, transaction_type, quantity, remarks, created_by) 
+                                    VALUES (:item_id, :employee_id, :transaction_date, :transaction_type, :quantity, :remarks, :created_by)");
+    
+            // Bind the values for the insert query
+            $stmt->bindValue(':item_id', $item_id, PDO::PARAM_INT);
+            $stmt->bindValue(':employee_id', $employee_id, PDO::PARAM_INT);
+            $stmt->bindValue(':transaction_date', $transaction_date, PDO::PARAM_STR);
+            $stmt->bindValue(':transaction_type', $transaction_type, PDO::PARAM_STR);
+            $stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+            $stmt->bindValue(':remarks', $remarks, PDO::PARAM_STR);
+            $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT); // Use $user_id here
+    
+            if ($stmt->execute()) {
+                $success_message = "Transaction recorded successfully!";
+            } else {
+                $error_message = "Error recording transaction: " . implode(', ', $stmt->errorInfo());
+            }
         } else {
-            $error_message = "Error recording transaction: " . implode(', ', $stmt->errorInfo());
+            $error_message = "Error updating item quantity: " . implode(', ', $conn->errorInfo());
         }
     } else {
-        $error_message = "Error updating item quantity: " . implode(', ', $conn->errorInfo());
+        $error_message = "Invalid transaction type.";
     }
 }
 ?>
+
+
 
 <?php include('header.php'); ?>
 
