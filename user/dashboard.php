@@ -206,5 +206,8 @@ $lowStockItems = $conn->query("
 
         </div>
     </div>
+    <footer class=" text-black py-3 mt-3 text-center">
+        <p>&copy; 2024 Developed by DT. All Rights Reserved.</p>
+    </footer>
 </body>
 </html>

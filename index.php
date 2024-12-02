@@ -45,11 +45,104 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Store Management - Login</title>
     <link href="css/tailwind.min.css" rel="stylesheet">
     <link href="css/all.min.css" rel="stylesheet">
+    <style>
+        .video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    animation: fadeInVideo 2s ease-in-out; /* Add fade-in animation */
+}
+
+@keyframes fadeInVideo {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+        /* Make the background video fill the entire screen */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        /* Darken overlay for the video */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Black overlay with 50% opacity */
+            z-index: 0;
+        }
+
+        /* Styling for login container with frosted glass effect */
+        .login-container {
+            z-index: 10;
+            position: relative;
+            max-width: 400px; /* Optional, you can adjust the size */
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Light border */
+        }
+
+        /* Container styling for the entire body */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Optional, to darken the background */
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+
+        /* Style for labels (make text color white) */
+        label {
+            color: #fff; /* Set the text color of the labels to white */
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
+    <!-- Background Video -->
+    <video autoplay muted loop class="video-background">
+        <source src="new.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Darken Overlay -->
+    <div class="video-overlay"></div>
+
     <div class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
-            <h1 class="text-2xl font-bold text-center mb-6">Store Management</h1>
+        <div class="login-container">
+            <!-- Logo Section -->
+            <div class="form-header">
+                <center><img src="nw.png" alt="Logo" class="w-45 h-30 mb-3"></center>
+                <h1 class="text-white font-bold">Store Management</h1>
+            </div>
             
             <?php if (isset($error)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -59,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             <form method="POST" action="">
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                    <label class="block text-sm font-bold mb-2" for="username">
                         Username
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -67,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 
                 <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
+                    <label class="block text-sm font-bold mb-2" for="password">
                         Password
                     </label>
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -78,6 +171,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         type="submit">
                     Sign In
                 </button>
+                
+                <footer class="text-white py-3 mt-3 text-center">
+                    <p>&copy; 2024 Developed by DT. All Rights Reserved.</p>
+                </footer>
             </form>
         </div>
     </div>

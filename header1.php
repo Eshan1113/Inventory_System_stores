@@ -58,18 +58,24 @@
                 </ul>
             </div>
         </div>
+        
         <div class="flex-1">
             <!-- Top Navigation -->
             <nav class="bg-white shadow-md">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex justify-between items-center py-4">
-                        <h1 class="text-xl font-bold text-gray-800">Dashboard</h1>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-gray-600">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                            <a href="logout.php" class="flex items-center text-red-600 hover:text-red-700">
-                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <!-- Dashboard Title with Image -->
+            <div class="flex items-center space-x-2">
+                <img src="nw.png" alt="Dashboard" class="w-55 h-10">
+               
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-600">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></span>
+                <a href="logout.php" class="flex items-center text-red-600 hover:text-red-700">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

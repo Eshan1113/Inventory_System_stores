@@ -1,8 +1,8 @@
 <?php
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'rohan');
-define('DB_PASS', 'rohan');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_NAME', 'store_management');
 
 // Establish database connection
