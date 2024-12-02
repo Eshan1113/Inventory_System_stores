@@ -1,5 +1,5 @@
 <?php
-include 'config.php'; // Database connection
+include '../config.php'; // Database connection
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $transaction_id = $_POST['transaction_id'] ?? null;

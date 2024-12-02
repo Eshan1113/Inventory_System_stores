@@ -13,10 +13,10 @@
                             <i class="fas fa-box-open mr-2"></i> Item Details
                         </div>
                         <ul class="ml-6 space-y-2">
-                            <li><a href="items/create.php" class="sidebar-link block text-gray-200 hover:text-white">Add Item</a></li>
-                            <li><a href="items/view.php" class="sidebar-link block text-gray-200 hover:text-white">View Items</a></li>
-                            <li><a href="items/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit Item</a></li>
-                            <li><a href="items/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete Item</a></li>
+                            <li><a href="item_add.php" class="sidebar-link block text-gray-200 hover:text-white">Add Item</a></li>
+                            <li><a href="Item_viwe.php" class="sidebar-link block text-gray-200 hover:text-white">View Items</a></li>
+                            <!-- <li><a href="items/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit Item</a></li>
+                            <li><a href="items/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete Item</a></li> -->
                         </ul>
                     </li>
 
@@ -34,7 +34,27 @@
                     </li>
 
                     <!-- User Management -->
-                   
+                    <!-- <li>
+                        <div class="mb-2 text-lg font-semibold text-gray-100">
+                            <i class="fas fa-users mr-2"></i> User Management
+                        </div>
+                        <ul class="ml-6 space-y-2">
+                            <li><a href="add_user.php" class="sidebar-link block text-gray-200 hover:text-white">Add User</a></li>
+                            <li><a href="view_user.php" class="sidebar-link block text-gray-200 hover:text-white">View Users</a></li>
+                            
+                        </ul>
+                    </li> -->
+                    <li>
+                        <div class="mb-2 text-lg font-semibold text-gray-100">
+                        <i class="fa fa-cog fa-spin fa-1x fa-fw"></i>
+                        <span class="sr-only">Loading...</span>Login Setting
+                        </div>
+                        <ul class="ml-6 space-y-2">
+                            <!-- <li><a href="user_log.php" class="sidebar-link block text-gray-200 hover:text-white">User Log</a></li> -->
+                            <li><a href="password_change.php" class="sidebar-link block text-gray-200 hover:text-white">Change Password</a></li>
+                            
+                        </ul>
+                    </li>
                 </ul>
             </div>
         </div>

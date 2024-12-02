@@ -1,5 +1,5 @@
 <?php
-require_once 'config.php';  // Include your database connection
+require_once '../config.php';  // Include your database connection
 
 // Handle errors and exceptions
 ini_set('display_errors', 1);

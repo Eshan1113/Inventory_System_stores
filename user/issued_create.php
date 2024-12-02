@@ -1,5 +1,5 @@
 <?php
-include 'config.php'; // Include your database connection file
+include '../config.php'; // Include your database connection file
 
 // Fetch data function
 function fetchData($conn, $table, $columns, $condition = '') {

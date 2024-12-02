@@ -20,12 +20,19 @@ $lowStockItems = $conn->query("SELECT item_name, quantity FROM items WHERE quant
 
 // Fetch recent transactions
 $recentTransactions = $conn->query("
-    SELECT it.*, i.item_name, e.full_name as employee_name 
+    SELECT it.*, inl.item_name AS item_name, e.full_name AS employee_name
     FROM item_transactions it
     JOIN items i ON it.item_id = i.item_id
+    JOIN item_name_list inl ON i.item_name = inl.id
     JOIN employees e ON it.employee_id = e.employee_id
-    ORDER BY transaction_date DESC 
+    ORDER BY it.transaction_date DESC
     LIMIT 5
+")->fetchAll();
+$lowStockItems = $conn->query("
+    SELECT inl.item_name, i.quantity, i.low_stock_threshold
+    FROM items i
+    JOIN item_name_list inl ON i.item_name = inl.id
+    WHERE i.quantity <= i.low_stock_threshold
 ")->fetchAll();
 ?>
 
@@ -98,7 +105,7 @@ $recentTransactions = $conn->query("
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
                 <div class="grid grid-cols-2 gap-4">
                     <?php if (hasPermission($conn, $_SESSION['user_id'], 'create_item')): ?>
-                    <a href="items/create.php" class="quick-action flex items-center p-4 bg-blue-50 rounded-lg">
+                    <a href="item_add.php" class="quick-action flex items-center p-4 bg-blue-50 rounded-lg">
                         <i class="fas fa-plus-circle text-blue-500 text-xl mr-3"></i>
                         <span class="text-blue-700">New Item</span>
                     </a>
@@ -112,7 +119,7 @@ $recentTransactions = $conn->query("
                     <?php endif; ?>
 
                     <?php if (hasPermission($conn, $_SESSION['user_id'], 'create_employee')): ?>
-                    <a href="employees/create.php" class="quick-action flex items-center p-4 bg-purple-50 rounded-lg">
+                    <a href="add_user.php" class="quick-action flex items-center p-4 bg-purple-50 rounded-lg">
                         <i class="fas fa-user-plus text-purple-500 text-xl mr-3"></i>
                         <span class="text-purple-700">Add Employee</span>
                     </a>
@@ -139,58 +146,57 @@ $recentTransactions = $conn->query("
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($recentTransactions as $transaction): ?>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($transaction['item_name']); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($transaction['employee_name']); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <?php echo $transaction['transaction_type'] == 'issue' 
-                                            ? 'bg-red-100 text-red-800' 
-                                            : 'bg-green-100 text-green-800'; ?>">
-                                        <?php echo ucfirst($transaction['transaction_type']); ?>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo date('M d, H:i', strtotime($transaction['transaction_date'])); ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
+    <?php foreach ($recentTransactions as $transaction): ?>
+    <tr class="table-row">
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <?php echo htmlspecialchars($transaction['item_name']); // Correct item name ?>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <?php echo htmlspecialchars($transaction['employee_name']); ?>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                <?php echo $transaction['transaction_type'] == 'issue' 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-green-100 text-green-800'; ?>">
+                <?php echo ucfirst($transaction['transaction_type']); ?>
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <?php echo date('M d, H:i', strtotime($transaction['transaction_date'])); ?>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Low Stock Items List -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">Low Stock Items</h2>
-                <div class="overflow-hidden">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($lowStockItems as $item): ?>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo htmlspecialchars($item['item_name']); ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo $item['quantity']; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Low Stock Items</h2>
+    <div class="overflow-hidden">
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <?php foreach ($lowStockItems as $item): ?>
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <?php echo htmlspecialchars($item['item_name']); ?>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <?php echo $item['quantity']; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
         </div>
     </div>

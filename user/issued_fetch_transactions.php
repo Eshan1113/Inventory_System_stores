@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 
 $search = isset($_POST['search']) ? trim($_POST['search']) : '';
 $transaction_type = isset($_POST['transaction_type']) ? trim($_POST['transaction_type']) : '';

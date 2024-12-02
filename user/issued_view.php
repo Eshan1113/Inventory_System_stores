@@ -1,5 +1,5 @@
 <?php
-include 'config.php'; // Include your database connection file
+include '../config.php'; // Include your database connection file
 
 // Function to fetch transactions based on transaction type
 function fetchTransactionsByType($conn, $transaction_type = '') {

@@ -1,6 +1,6 @@
 <?php
 // Include database connection
-include 'config.php';
+include '../config.php';
 
 // Ensure that the PDO connection is established
 if (!$conn) {
