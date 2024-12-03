@@ -24,7 +24,7 @@
         <table id="itemsTable" class="table-auto w-full border-collapse border border-gray-200">
             <thead>
             <tr class="bg-gray-200">
-                  
+            <th class="border px-4 py-2">Item Code</th>
                     <th class="border px-4 py-2">Local Item Code</th>
                     <th class="border px-4 py-2">Item Name</th>
                     <th class="border px-4 py-2">Specifications</th>

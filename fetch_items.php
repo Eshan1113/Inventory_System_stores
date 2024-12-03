@@ -49,7 +49,7 @@ $items = $stmt->fetchAll();
 
 foreach ($items as $item) {
     echo "<tr>
-            
+             <td class='border px-4 py-2'>{$item['item_code']}</td>
             <td class='border px-4 py-2'>{$item['local_item_code']}</td>
             <td class='border px-4 py-2'>{$item['item_name']}</td>
             <td class='border px-4 py-2'>{$item['specifications']}</td>
