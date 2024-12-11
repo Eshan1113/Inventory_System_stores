@@ -3,7 +3,7 @@
 <head>
     <?php include('header.php'); ?>
     <script src="css/jquery-3.6.0.min.js"></script>
-    <script src="css/tailwind.min.css"></script>
+    <link href="css/tailwind.min.css" rel="stylesheet">
     <title>Item List</title>
 </head>
 <body class="bg-gray-50">
@@ -36,6 +36,12 @@
                 <option value="Consumables">Consumables</option>
                 <!-- Add all categories here -->
             </select>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="flex justify-end mb-4">
+            <button id="exportPdf" class="bg-red-500 text-white px-4 py-2 rounded mr-2">Export as PDF</button>
+            <button id="exportExcel" class="bg-green-500 text-white px-4 py-2 rounded">Export as Excel</button>
         </div>
 
         <!-- Table to display items -->
@@ -116,6 +122,35 @@
             $('#closeModal').on('click', function() {
                 $('#imagePreviewModal').addClass('hidden');
             });
+
+            // Export to PDF
+            $('#exportPdf').on('click', function() {
+                var params = getFilters();
+                window.location.href = 'export_pdf.php?' + params;
+            });
+
+            // Export to Excel
+            $('#exportExcel').on('click', function() {
+                var params = getFilters();
+                window.location.href = 'export_excel.php?' + params;
+            });
+
+            // Helper function to get filter parameters as query string
+            function getFilters() {
+                var searchTerm = $('#searchBox').val();
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+                var location = $('#locationFilter').val();
+                var category = $('#categoryFilter').val();
+
+                return $.param({
+                    search: searchTerm,
+                    start_date: startDate,
+                    end_date: endDate,
+                    location: location,
+                    category: category
+                });
+            }
         });
     </script>
 </body>

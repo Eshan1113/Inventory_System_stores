@@ -16,6 +16,7 @@
                             <li><a href="item_add.php" class="sidebar-link block text-gray-200 hover:text-white">Add Item</a></li>
                             <li><a href="Item_viwe.php" class="sidebar-link block text-gray-200 hover:text-white">View Items</a></li>
                             <li><a href="code_gen/index.php" class="sidebar-link block text-gray-200 hover:text-white">Genarte Item Code</a></li>
+                            <li><a href="item_category.php" class="sidebar-link block text-gray-200 hover:text-white">Crate New Item Category</a></li>
                             <!-- <li><a href="items/edit.php" class="sidebar-link block text-gray-200 hover:text-white">Edit Item</a></li>
                             <li><a href="items/delete.php" class="sidebar-link block text-gray-200 hover:text-white">Delete Item</a></li> -->
                         </ul>

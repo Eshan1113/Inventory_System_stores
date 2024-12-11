@@ -220,7 +220,7 @@ try {
 
                 <!-- Item Name -->
                 <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="item_name">Item Name</label>
+                    <label class="block text-gray-700 font-bold mb-2" for="item_name">Main Category</label>
                     <select name="item_name" id="item_name" class="w-full border rounded select2">
                         <option value="">-- Select Item Name --</option>
 
