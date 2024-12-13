@@ -115,7 +115,7 @@ if (isset($_POST['location_submit'])) {
     <div class="flex-grow flex justify-around items-start mt-10">
         <!-- Main Category Form -->
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Create Main Category</h2>
+            <h2 class="text-2xl font-bold mb-6 text-gray-1000">Create Main Category</h2>
 
             <!-- Success/Error Message -->
             <?php if (!empty($mainCategorySuccess)): ?>
@@ -175,7 +175,7 @@ if (isset($_POST['location_submit'])) {
                 </div>
                 <button type="button" id="addItemButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-4">Add More Items</button>
                 <input type="hidden" name="sub_category_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Submit</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Sub Category</button>
             </form>
         </div>
 
@@ -206,7 +206,7 @@ if (isset($_POST['location_submit'])) {
                     <textarea name="address" id="address" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
                 </div>
                 <input type="hidden" name="location_submit" value="1">
-                <button type="submit" class="w-full bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Location</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Location</button>
             </form>
         </div>
     </div>

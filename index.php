@@ -168,10 +168,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-                        type="submit">
-                    Sign In
-                </button>
-                
+        type="submit">
+    Sign In
+</button>
+<br>
+<br>
+<a href="viweuser_item.php" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full block text-center">
+    View Item
+</a>
                 <footer class="text-white py-3 mt-3 text-center">
                     <p>&copy; 2024 Developed by DT. All Rights Reserved.</p>
                 </footer>
