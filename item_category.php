@@ -1,13 +1,30 @@
 <?php
+// Enable error reporting for debugging (remove in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once 'config.php'; // Ensure the path is correct
 
 // Initialize flags for success and error messages
 $mainCategorySuccess = '';
-$subCategorySuccess = '';
 $mainCategoryError = '';
+
+$subCategorySuccess = '';
 $subCategoryError = '';
+
+$addItemSuccess = '';
+$addItemError = '';
+
 $locationSuccess = '';
 $locationError = '';
+
+// Function to sanitize input (assuming it's defined in config.php)
+if (!function_exists('sanitizeInput')) {
+    function sanitizeInput($data) {
+        return htmlspecialchars(trim($data));
+    }
+}
 
 // Process Main Category Form
 if (isset($_POST['main_category_submit'])) {
@@ -36,26 +53,39 @@ if (isset($_POST['main_category_submit'])) {
 // Process Sub Category Form
 if (isset($_POST['sub_category_submit'])) {
     $subItemName = sanitizeInput($_POST['sub_item_name']);
+
+    // Basic validation
+    if (empty($subItemName)) {
+        $subCategoryError = "Sub Category Name is required.";
+    } else {
+        try {
+            // Insert sub item into the sub_item_list table
+            $sqlInsertSub = "INSERT INTO sub_item_list (sub_item_name) VALUES (:sub_item_name)";
+            $stmtInsertSub = $conn->prepare($sqlInsertSub);
+            $stmtInsertSub->bindParam(':sub_item_name', $subItemName, PDO::PARAM_STR);
+            $stmtInsertSub->execute();
+
+            $subCategorySuccess = "Sub Category added successfully!";
+        } catch (PDOException $e) {
+            $subCategoryError = "Error inserting sub category: " . $e->getMessage();
+        }
+    }
+}
+
+// Process Add Items Form
+if (isset($_POST['add_items_submit'])) {
     $itemNames = isset($_POST['item_names']) ? $_POST['item_names'] : [];
 
     // Sanitize each item name
     $sanitizedItemNames = array_map('sanitizeInput', $itemNames);
 
     // Basic validation
-    if (empty($subItemName)) {
-        $subCategoryError = "Sub Category Name is required.";
-    } elseif (empty($sanitizedItemNames) || !array_filter($sanitizedItemNames)) {
-        $subCategoryError = "At least one Item Name is required.";
+    if (empty($sanitizedItemNames) || !array_filter($sanitizedItemNames)) {
+        $addItemError = "At least one Item Name is required.";
     } else {
         try {
             // Start transaction
             $conn->beginTransaction();
-
-            // Insert sub item and item names as before
-            $sqlInsertSub = "INSERT INTO sub_item_list (sub_item_name) VALUES (:sub_item_name)";
-            $stmtInsertSub = $conn->prepare($sqlInsertSub);
-            $stmtInsertSub->bindParam(':sub_item_name', $subItemName, PDO::PARAM_STR);
-            $stmtInsertSub->execute();
 
             foreach ($sanitizedItemNames as $itemName) {
                 if (!empty($itemName)) {
@@ -67,10 +97,10 @@ if (isset($_POST['sub_category_submit'])) {
             }
 
             $conn->commit();
-            $subCategorySuccess = "Sub Category and Items added successfully!";
+            $addItemSuccess = "Items added successfully!";
         } catch (PDOException $e) {
             $conn->rollBack();
-            $subCategoryError = "Error inserting sub category or item names: " . $e->getMessage();
+            $addItemError = "Error inserting items: " . $e->getMessage();
         }
     }
 }
@@ -99,8 +129,6 @@ if (isset($_POST['location_submit'])) {
     }
 }
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,10 +140,10 @@ if (isset($_POST['location_submit'])) {
 <body class="bg-gray-50 flex flex-col min-h-screen">
     <?php include('header1.php'); ?>
 
-    <div class="flex-grow flex justify-around items-start mt-10">
+    <div class="flex-grow flex flex-col md:flex-row justify-around items-start mt-10 space-y-8 md:space-y-0 md:space-x-8">
         <!-- Main Category Form -->
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-6 text-gray-1000">Create Main Category</h2>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Create Main Category</h2>
 
             <!-- Success/Error Message -->
             <?php if (!empty($mainCategorySuccess)): ?>
@@ -131,16 +159,16 @@ if (isset($_POST['location_submit'])) {
 
             <!-- Form -->
             <form action="item_category.php" method="POST">
-                <div>
+                <div class="mb-4">
                     <label for="main_category_name" class="block text-gray-700 font-bold mb-1">Main Category Name</label>
                     <input type="text" name="main_category_name" id="main_category_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['main_category_name']) ? htmlspecialchars($_POST['main_category_name']) : ''; ?>" required>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="description" class="block text-gray-700 font-bold mb-1">Description</label>
                     <textarea name="description" id="description" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
                 </div>
                 <input type="hidden" name="main_category_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Main Category</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Main Category</button>
             </form>
         </div>
 
@@ -162,10 +190,35 @@ if (isset($_POST['location_submit'])) {
 
             <!-- Form -->
             <form action="item_category.php" method="POST">
-                <div>
+                <div class="mb-4">
                     <label for="sub_item_name" class="block text-gray-700 font-bold mb-1">Sub Category Name</label>
                     <input type="text" name="sub_item_name" id="sub_item_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['sub_item_name']) ? htmlspecialchars($_POST['sub_item_name']) : ''; ?>" required>
                 </div>
+                <input type="hidden" name="sub_category_submit" value="1">
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Sub Category</button>
+            </form>
+        </div>
+
+        <!-- Add Items Form -->
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Add Items</h2>
+
+            <!-- Success/Error Message -->
+            <?php if (!empty($addItemSuccess)): ?>
+                <div id="addItemSuccessMessage" class="bg-green-100 text-green-700 p-4 rounded mb-4">
+                    <?php echo htmlspecialchars($addItemSuccess); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($addItemError)): ?>
+                <div id="addItemErrorMessage" class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                    <?php echo htmlspecialchars($addItemError); ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Form -->
+            <form action="item_category.php" method="POST">
+                <!-- Removed Sub Category Selection Fields -->
+
                 <div id="itemsContainer">
                     <label class="block text-gray-700 font-bold mb-1">Add Collection Of Items</label>
                     <div class="item-field flex items-center mb-2">
@@ -173,9 +226,9 @@ if (isset($_POST['location_submit'])) {
                         <button type="button" class="remove-item ml-2 bg-red-500 text-white px-3 py-1 rounded">Remove</button>
                     </div>
                 </div>
-                <button type="button" id="addItemButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-4">Add More Items</button>
-                <input type="hidden" name="sub_category_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Sub Category</button>
+                <button type="button" id="addItemButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-4">Add More Items</button>
+                <input type="hidden" name="add_items_submit" value="1">
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Items</button>
             </form>
         </div>
 
@@ -197,21 +250,22 @@ if (isset($_POST['location_submit'])) {
 
             <!-- Form -->
             <form action="item_category.php" method="POST">
-                <div>
+                <div class="mb-4">
                     <label for="location_name" class="block text-gray-700 font-bold mb-1">Location Name</label>
                     <input type="text" name="location_name" id="location_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['location_name']) ? htmlspecialchars($_POST['location_name']) : ''; ?>" required>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="address" class="block text-gray-700 font-bold mb-1">Address</label>
                     <textarea name="address" id="address" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
                 </div>
                 <input type="hidden" name="location_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mt-4">Add Location</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Location</button>
             </form>
         </div>
     </div>
 
     <script>
+        // Add more items functionality
         document.getElementById('addItemButton').addEventListener('click', function () {
             const itemsContainer = document.getElementById('itemsContainer');
             const itemField = document.createElement('div');
@@ -223,6 +277,7 @@ if (isset($_POST['location_submit'])) {
             itemsContainer.appendChild(itemField);
         });
 
+        // Remove item field functionality
         document.getElementById('itemsContainer').addEventListener('click', function (e) {
             if (e.target && e.target.classList.contains('remove-item')) {
                 e.target.parentElement.remove();
@@ -230,11 +285,19 @@ if (isset($_POST['location_submit'])) {
         });
 
         // Auto-hide success messages after 3 seconds
-        const successMessages = document.querySelectorAll('#mainSuccessMessage, #subSuccessMessage, #locationSuccessMessage');
+        const successMessages = document.querySelectorAll('#mainSuccessMessage, #subSuccessMessage, #addItemSuccessMessage, #locationSuccessMessage');
         successMessages.forEach(msg => {
             setTimeout(() => {
                 msg.classList.add('hidden');
             }, 3000);
+        });
+
+        // Auto-hide error messages after 5 seconds
+        const errorMessages = document.querySelectorAll('#mainErrorMessage, #subErrorMessage, #addItemErrorMessage, #locationErrorMessage');
+        errorMessages.forEach(msg => {
+            setTimeout(() => {
+                msg.classList.add('hidden');
+            }, 5000);
         });
     </script>
 </body>
