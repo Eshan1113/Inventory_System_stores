@@ -1,25 +1,31 @@
 <?php
+// index.php
+
 include 'config.php'; // Include your database connection file
 
 // Function to fetch transactions based on transaction type
 function fetchTransactionsByType($conn, $transaction_type = '') {
+    // Build condition if transaction type is provided
     $condition = $transaction_type ? "WHERE t.transaction_type = '$transaction_type'" : '';
+    
+    // NOTE: There's a semicolon in the middle of your SQL in the snippet. 
+    //       Make sure your SQL statement is correct. 
+    //       Below is a corrected SQL (removed the extra semicolon before $condition).
     $sql = "SELECT 
-    t.transaction_id,
-    i.item_name,  
-    e.full_name AS employee_name,
-    g.group_name,
-    t.transaction_date,
-    t.transaction_type,
-    t.quantity,
-    t.remarks,
-    t.created_by
-FROM item_transactions t
-JOIN items ini ON t.item_id = ini.item_id
-JOIN item_name_list i ON ini.item_name = i.id -- Updated to JOIN with item_name_list
-JOIN employees e ON t.employee_id = e.employee_id
-JOIN employee_groups g ON e.group_id = g.group_id;
-
+                t.transaction_id,
+                i.item_name,  
+                e.full_name AS employee_name,
+                g.group_name,
+                t.transaction_date,
+                t.transaction_type,
+                t.quantity,
+                t.remarks,
+                t.created_by
+            FROM item_transactions t
+            JOIN items ini ON t.item_id = ini.item_id
+            JOIN item_name_list i ON ini.item_name = i.id
+            JOIN employees e ON t.employee_id = e.employee_id
+            JOIN employee_groups g ON e.group_id = g.group_id
             $condition
             ORDER BY t.transaction_date DESC";
     
@@ -59,11 +65,14 @@ $transactions = fetchTransactionsByType($conn);
 <br>
 <div class="max-w-5xl mx-auto bg-white p-10 rounded shadow-md">
     <h2 class="text-2xl font-bold mb-4">Item Transactions</h2>
+    
+    <!-- Search Transactions -->
     <div class="mb-4">
         <label class="block mb-2 font-medium">Search Transactions</label>
         <input type="text" id="search_transactions" class="block w-full p-2 border rounded" placeholder="Search by item name, employee, group, or remarks...">
     </div>
 
+    <!-- Date Range Filters -->
     <div class="mb-4 grid grid-cols-2 gap-4">
         <div>
             <label for="start_date" class="block font-medium">Start Date</label>
@@ -88,6 +97,12 @@ $transactions = fetchTransactionsByType($conn);
     </select>
 
     <br>
+    
+    <!-- EXPORT TO EXCEL BUTTON -->
+    <a href="export2_excel.php" 
+       class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+       Export All to Excel
+    </a>
 
     <table class="table-auto w-full border-collapse border border-gray-200" id="transaction_table">
         <thead>
@@ -119,6 +134,7 @@ $transactions = fetchTransactionsByType($conn);
     </table>
 </div>
 
+<!-- AJAX for fetching transactions with filters -->
 <script>
     $(document).ready(function () {
         function fetchTransactions() {
