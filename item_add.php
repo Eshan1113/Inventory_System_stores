@@ -220,7 +220,7 @@ try {
 
                 <!-- Item Name -->
                 <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="item_name">Main Category</label>
+                    <label class="block text-gray-700 font-bold mb-2" for="item_name">Item Name</label>
                     <select name="item_name" id="item_name" class="w-full border rounded select2">
                         <option value="">-- Select Item Name --</option>
 
@@ -289,21 +289,21 @@ try {
                     </select>
                 </div>
                 <!-- Quantity -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="quantity">Quantity</label>
-                    <input type="number" name="quantity" id="quantity"
-                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                        value="<?= $item['quantity'] ?? '' ?>">
-                </div>
+               <!-- Quantity -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2" for="quantity">Quantity *</label>
+    <input type="number" name="quantity" id="quantity" min="0" step="1"
+        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+        value="<?= htmlspecialchars($item['quantity'] ?? '0') ?>" required>
+</div>
 
-                <!-- Low Stock Threshold -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="low_stock_threshold">Low Stock
-                        Threshold</label>
-                    <input type="number" name="low_stock_threshold" id="low_stock_threshold"
-                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                        value="<?= $item['low_stock_threshold'] ?? '' ?>">
-                </div>
+<!-- Low Stock Threshold -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2" for="low_stock_threshold">Low Stock Threshold *</label>
+    <input type="number" name="low_stock_threshold" id="low_stock_threshold" min="0" step="1"
+        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+        value="<?= htmlspecialchars($item['low_stock_threshold'] ?? '0') ?>" required>
+</div>
 
                 <!-- Warranty Date -->
                 <div class="mb-4">
@@ -322,12 +322,13 @@ try {
                 </div>
 
                 <!-- Purchase Price -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="purchase_price">Purchase Price</label>
-                    <input type="text" name="purchase_price" id="purchase_price"
-                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-                        value="<?= $item['purchase_price'] ?? '' ?>">
-                </div>
+            <!-- Purchase Price -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2" for="purchase_price">Purchase Price *</label>
+    <input type="number" name="purchase_price" id="purchase_price" min="0" step="0.01" required
+        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+        value="<?= htmlspecialchars($item['purchase_price'] ?? '0.00') ?>">
+</div>
 
 
                 <!-- Origin Country -->
