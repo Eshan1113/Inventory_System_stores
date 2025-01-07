@@ -21,7 +21,8 @@ $locationError = '';
 
 // Function to sanitize input (assuming it's defined in config.php)
 if (!function_exists('sanitizeInput')) {
-    function sanitizeInput($data) {
+    function sanitizeInput($data)
+    {
         return htmlspecialchars(trim($data));
     }
 }
@@ -37,11 +38,18 @@ if (isset($_POST['main_category_submit'])) {
     } else {
         try {
             // Insert the main category into the item_categories table
-            $sqlInsertCategory = "INSERT INTO item_categories (category_name, description) VALUES (:category_name, :description)";
-            $stmtInsertCategory = $conn->prepare($sqlInsertCategory);
-            $stmtInsertCategory->bindParam(':category_name', $categoryName, PDO::PARAM_STR);
-            $stmtInsertCategory->bindParam(':description', $description, PDO::PARAM_STR);
-            $stmtInsertCategory->execute();
+            $sqlCheckCategory = "SELECT COUNT(*) FROM item_categories WHERE category_name = :category_name";
+            $stmtCheckCategory = $conn->prepare($sqlCheckCategory);
+            $stmtCheckCategory->bindParam(':category_name', $categoryName, PDO::PARAM_STR);
+            $stmtCheckCategory->execute();
+            $count = $stmtCheckCategory->fetchColumn();
+
+            if ($count > 0) {
+                $mainCategoryError = "This category name already exists.";
+            } else {
+                // Proceed with insertion
+            }
+
 
             $mainCategorySuccess = "Main Category added successfully!";
         } catch (PDOException $e) {
@@ -131,16 +139,19 @@ if (isset($_POST['location_submit'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <?php include('header.php'); ?>
     <link rel="stylesheet" href="css/tailwind.min.css">
     <script src="js/jquery-3.6.0.min.js"></script>
     <title>Item List</title>
 </head>
+
 <body class="bg-gray-50 flex flex-col min-h-screen">
     <?php include('header1.php'); ?>
 
-    <div class="flex-grow flex flex-col md:flex-row justify-around items-start mt-10 space-y-8 md:space-y-0 md:space-x-8">
+    <div
+        class="flex-grow flex flex-col md:flex-row justify-around items-start mt-10 space-y-8 md:space-y-0 md:space-x-8">
         <!-- Main Category Form -->
         <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Create Main Category</h2>
@@ -160,15 +171,22 @@ if (isset($_POST['location_submit'])) {
             <!-- Form -->
             <form action="item_category.php" method="POST">
                 <div class="mb-4">
-                    <label for="main_category_name" class="block text-gray-700 font-bold mb-1">Main Category Name</label>
-                    <input type="text" name="main_category_name" id="main_category_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['main_category_name']) ? htmlspecialchars($_POST['main_category_name']) : ''; ?>" required>
+                    <label for="main_category_name" class="block text-gray-700 font-bold mb-1">Main Category
+                        Name</label>
+                    <input type="text" name="main_category_name" id="main_category_name"
+                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                        value="<?php echo isset($_POST['main_category_name']) ? htmlspecialchars($_POST['main_category_name']) : ''; ?>"
+                        required>
                 </div>
                 <div class="mb-4">
                     <label for="description" class="block text-gray-700 font-bold mb-1">Description</label>
-                    <textarea name="description" id="description" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
+                    <textarea name="description" id="description"
+                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                        required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
                 </div>
                 <input type="hidden" name="main_category_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Main Category</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Main
+                    Category</button>
             </form>
         </div>
 
@@ -192,10 +210,14 @@ if (isset($_POST['location_submit'])) {
             <form action="item_category.php" method="POST">
                 <div class="mb-4">
                     <label for="sub_item_name" class="block text-gray-700 font-bold mb-1">Sub Category Name</label>
-                    <input type="text" name="sub_item_name" id="sub_item_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['sub_item_name']) ? htmlspecialchars($_POST['sub_item_name']) : ''; ?>" required>
+                    <input type="text" name="sub_item_name" id="sub_item_name"
+                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                        value="<?php echo isset($_POST['sub_item_name']) ? htmlspecialchars($_POST['sub_item_name']) : ''; ?>"
+                        required>
                 </div>
                 <input type="hidden" name="sub_category_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Sub Category</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Sub
+                    Category</button>
             </form>
         </div>
 
@@ -222,13 +244,18 @@ if (isset($_POST['location_submit'])) {
                 <div id="itemsContainer">
                     <label class="block text-gray-700 font-bold mb-1">Add Collection Of Items</label>
                     <div class="item-field flex items-center mb-2">
-                        <input type="text" name="item_names[]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Enter item name" required>
-                        <button type="button" class="remove-item ml-2 bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+                        <input type="text" name="item_names[]"
+                            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                            placeholder="Enter item name" required>
+                        <button type="button"
+                            class="remove-item ml-2 bg-red-500 text-white px-3 py-1 rounded">Remove</button>
                     </div>
                 </div>
-                <button type="button" id="addItemButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-4">Add More Items</button>
+                <button type="button" id="addItemButton"
+                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-4">Add More Items</button>
                 <input type="hidden" name="add_items_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Items</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add
+                    Items</button>
             </form>
         </div>
 
@@ -252,14 +279,20 @@ if (isset($_POST['location_submit'])) {
             <form action="item_category.php" method="POST">
                 <div class="mb-4">
                     <label for="location_name" class="block text-gray-700 font-bold mb-1">Location Name</label>
-                    <input type="text" name="location_name" id="location_name" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" value="<?php echo isset($_POST['location_name']) ? htmlspecialchars($_POST['location_name']) : ''; ?>" required>
+                    <input type="text" name="location_name" id="location_name"
+                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                        value="<?php echo isset($_POST['location_name']) ? htmlspecialchars($_POST['location_name']) : ''; ?>"
+                        required>
                 </div>
                 <div class="mb-4">
                     <label for="address" class="block text-gray-700 font-bold mb-1">Address</label>
-                    <textarea name="address" id="address" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                    <textarea name="address" id="address"
+                        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+                        required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
                 </div>
                 <input type="hidden" name="location_submit" value="1">
-                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add Location</button>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Add
+                    Location</button>
             </form>
         </div>
     </div>
@@ -299,6 +332,29 @@ if (isset($_POST['location_submit'])) {
                 msg.classList.add('hidden');
             }, 5000);
         });
+        document.getElementById('main_category_name').addEventListener('input', function () {
+            const enteredValue = this.value.trim().toLowerCase();
+            const existingNames = ['category1', 'category2']; // Replace with fetched data
+            if (existingNames.includes(enteredValue)) {
+                alert('This category name already exists.');
+            }
+        });
+        try {
+            $stmtInsertCategory -> execute();
+        } catch (PDOException $e) {
+            if ($e -> getCode() == 23000) { // Integrity constraint violation
+                $mainCategoryError = "This category name already exists.";
+            } else {
+                $mainCategoryError = "Error inserting main category: ".$e -> getMessage();
+            }
+        }
+
     </script>
 </body>
+
 </html>
+<!-- 
+ALTER TABLE item_categories ADD UNIQUE (category_name);
+ALTER TABLE sub_item_list ADD UNIQUE (sub_item_name);
+ALTER TABLE item_name_list ADD UNIQUE (item_name);
+ALTER TABLE locations ADD UNIQUE (location_name); -->
