@@ -353,8 +353,4 @@ if (isset($_POST['location_submit'])) {
 </body>
 
 </html>
-<!-- 
-ALTER TABLE item_categories ADD UNIQUE (category_name);
-ALTER TABLE sub_item_list ADD UNIQUE (sub_item_name);
-ALTER TABLE item_name_list ADD UNIQUE (item_name);
-ALTER TABLE locations ADD UNIQUE (location_name); -->
+
